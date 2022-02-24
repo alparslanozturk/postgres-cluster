@@ -25,21 +25,24 @@ debug: select * from pg_replication_slots;
 debug: default(replica) isneirse -> alter system set wal_level TO 'logical';
 debug: select pg_conf_reload();
 
-
 debug: bir hata yaparsanız slot silmek için;
 debug: select pg_drop_replication_slot('db2')
 
 
 
 docker exec -it db2 bash 
+
 rm -rf /var/lib/postgresql/data/*
+
 pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db2 -h 7.7.7.11 -P -v
 
 docker start db2 
 
 
 docker exec -it db2 bash 
+
 rm -rf /var/lib/postgresql/data/*
+
 pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db3 -h 7.7.7.11 -P -v
 
 docker start db3
