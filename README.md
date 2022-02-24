@@ -16,8 +16,7 @@ host    replication     all             7.7.7.0/24              trust
   
 
 
-
-'''
+```
 debug: select pg_drop_replication_slot('kuheylan');
 debug: select * from pg_stat_replication;
 debug: select * from pg_replication_slots;
@@ -27,8 +26,7 @@ debug: select pg_conf_reload();
 
 debug: bir hata yaparsanız slot silmek için;
 debug: select pg_drop_replication_slot('db2')
-'''
-
+```
 
 docker exec -it db2 bash 
 
