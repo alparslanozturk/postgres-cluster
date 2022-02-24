@@ -17,15 +17,14 @@ host    replication     all             7.7.7.0/24              trust
 
 
 ```
-debug: select pg_drop_replication_slot('kuheylan');
-debug: select * from pg_stat_replication;
-debug: select * from pg_replication_slots;
+select pg_drop_replication_slot('kuheylan');
+select * from pg_stat_replication;
+select * from pg_replication_slots;
 
-debug: default(replica) isneirse -> alter system set wal_level TO 'logical';
-debug: select pg_conf_reload();
+default(replica) isneirse -> alter system set wal_level TO 'logical';
+select pg_conf_reload();
 
-debug: bir hata yaparsanız slot silmek için;
-debug: select pg_drop_replication_slot('db2')
+select pg_drop_replication_slot('db2')
 ```
 
 docker exec -it db2 bash 
