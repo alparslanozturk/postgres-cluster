@@ -4,6 +4,10 @@
 
 docker ile postgresql replication kurulumu anlatılacaktır. 
 
+
+![image](https://user-images.githubusercontent.com/9527118/155673474-f1e87e5c-899c-4b69-b1e4-351faa27c16b.png)
+
+
 1. Aynı extension kurulu olmalıdır. 
 2. "postgres" kullanıcı için pg_hba.conf a bir satır girilmelidir.
 3. "repuser" gibi bir role acilaiblir. tüm yetkileri readonly olacaktir. 
