@@ -10,6 +10,7 @@ docker ile postgresql replication kurulumu anlatılacaktır.
   
 
 docker exec -it --user postgres db1 bash
+
 create role repuser password 'parola' login replication;
 
 -> pg_hba.conf;
