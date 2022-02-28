@@ -2,7 +2,7 @@
 
 # Postgresql cluster replication kurulumu
 
-docker ile postgresql replication kurulumu anlatılacaktır. 
+docker ile postgresql replication kurulumu yapılacaktır. 
 
 
 ![image](https://user-images.githubusercontent.com/9527118/155673474-f1e87e5c-899c-4b69-b1e4-351faa27c16b.png)
