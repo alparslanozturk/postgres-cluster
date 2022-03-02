@@ -2,7 +2,7 @@
 
 # pgbackrest ayarları kontrol
 
-'''
+```
 $ docker exec -it --user postgres db1 psql
 psql (14.1 (Debian 14.1-1.pgdg110+1))
 Type "help" for help.
@@ -20,4 +20,4 @@ postgres=# show archive_command;
 (1 row)
 
 postgres=# \q
-'''
+```
