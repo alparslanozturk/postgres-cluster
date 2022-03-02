@@ -3,6 +3,7 @@
 
 ```
 $ alias db1='docker exec -it --user postgres pgbackrest bash -c "cd ~; bash "'
+
 $ db1
 postgres@pgbackrest:~$
 postgres@pgbackrest:~$
