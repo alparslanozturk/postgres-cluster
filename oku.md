@@ -1,7 +1,9 @@
 
 # stanza-create: tüm sunucular açılınca yapmak lazım .
+
 ```
 $ docker exec -it --user postgres pgbackrest bash
+
 postgres@pgbackrest:/$ pgbackrest --stanza=demo --log-level-console=info stanza-create
 ```
 
