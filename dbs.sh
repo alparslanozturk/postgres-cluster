@@ -26,11 +26,11 @@ echo 'postgres ALL=(ALL:ALL) NOPASSWD:ALL' > /etc/sudoers.d/postgres
 echo 'postgres:parola'|chpasswd
 sed -i '2 i sudo /etc/init.d/ssh start' /usr/local/bin/docker-entrypoint.sh
 "
-docker cp ssh/id_postgres pgbackrest:/var/lib/postgresql/.ssh/
-docker cp ssh/id_postgres.pub pgbackrest:/var/lib/postgresql/.ssh/
-docker cp ssh/authorized_keys pgbackrest:/var/lib/postgresql/.ssh/
-docker exec -it pgbackrest bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
-docker exec -it pgbackrest bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
+docker cp ssh/id_postgres db$i:/var/lib/postgresql/.ssh/
+docker cp ssh/id_postgres.pub db$i:/var/lib/postgresql/.ssh/
+docker cp ssh/authorized_keys db$i:/var/lib/postgresql/.ssh/
+docker exec -it db$i bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
+docker exec -it db$i bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
 ### bash postgres user
 docker exec --user postgres db$i bash -c " 
