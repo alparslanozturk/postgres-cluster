@@ -23,6 +23,12 @@ docker exec -it pgbackrest bash -c "
 apt update && apt install iproute2 procps netcat sudo curl nano openssh-server pgbackrest -y 
 touch /var/lib/postgresql/.psql_history && chown postgres: /var/lib/postgresql/.psql_history
 mkdir /var/lib/postgresql/.ssh
+cat >/var/lib/postgresql/.ssh/config<<EOF
+Host *
+        StrictHostKeyChecking no
+        UserKnownHostsFile=/dev/null
+        LogLevel quiet
+EOF
 chown postgres: /etc/pgbackrest.conf /var/lib/pgbackrest
 echo 'postgres:parola'|chpasswd
 echo 'postgres ALL=(ALL:ALL) NOPASSWD:ALL' > /etc/sudoers.d/postgres
@@ -79,6 +85,12 @@ docker exec db$i bash -c "
 apt update && apt install iproute2 procps netcat sudo curl nano openssh-server pgbackrest -y
 touch /var/lib/postgresql/.psql_history && chown postgres: /var/lib/postgresql/.psql_history
 mkdir /var/lib/postgresql/.ssh 
+cat >/var/lib/postgresql/.ssh/config<<EOF
+Host *
+        StrictHostKeyChecking no
+        UserKnownHostsFile=/dev/null
+        LogLevel quiet
+EOF
 echo 'postgres ALL=(ALL:ALL) NOPASSWD:ALL' > /etc/sudoers.d/postgres
 echo 'postgres:parola'|chpasswd
 sed -i '2 i sudo /etc/init.d/ssh start' /usr/local/bin/docker-entrypoint.sh
