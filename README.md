@@ -18,6 +18,7 @@ docker exec -it --user postgres db1 bash
 create role repuser password 'parola' login replication;
 
 -> pg_hba.conf;
+
 host   replication     all             7.7.7.0/24              trust
   
 
