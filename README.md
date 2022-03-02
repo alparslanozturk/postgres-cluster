@@ -2,7 +2,7 @@
 # alias eklenerek de herhangi bir docker a bağlanılabilir. 
 
 ```
-$ alias db1='docker exec -it --user postgres pgbackrest bash -c "cd ~; bash "'
+$ alias db1='docker exec -it --user postgres db1 bash -c "cd ~; bash "'
 
 $ db1
 postgres@pgbackrest:~$
