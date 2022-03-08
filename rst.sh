@@ -30,6 +30,7 @@ docker exec -it pgbackrest bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
 ### postgres
 docker exec -it --user postgres pgbackrest bash -c " 
+sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 cat > /etc/pgbackrest.conf<<EOF
 [global]
 repo1-path=/var/lib/pgbackrest

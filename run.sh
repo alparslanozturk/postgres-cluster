@@ -42,6 +42,7 @@ docker exec -it pgbackrest bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
 ### postgres
 docker exec -it --user postgres pgbackrest bash -c " 
+sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 cat > /etc/pgbackrest.conf<<EOF
 [global]
 repo1-path=/var/lib/pgbackrest
@@ -103,7 +104,7 @@ docker exec -it db$i bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
 ### postgres
 docker exec --user postgres db$i bash -c " 
-echo  'host replication all 7.7.7.0/24 trust' >> /var/lib/postgresql/data/pg_hba.conf 
+sed -i '$ host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf 
 cat >/etc/pgbackrest.conf<<EOF
 [global]
 repo1-host=7.7.7.100
@@ -112,11 +113,11 @@ repo1-host-user=postgres
 pg$i-path=/var/lib/postgresql/data
 EOF
 #pgbackrest --stanza=demo --log-level-console=info stanza-create
-pgbackrest --stanza=demo --log-level-console=info check
+#pgbackrest --stanza=demo --log-level-console=info check
 "
 ### psql 
 docker exec --user postgres db$i psql -c "alter system set archive_mode to on"
-docker exec --user postgres db$i psql -c "alter system set archive_command to 'pgbackrest --stanza=demo arhive-push %p'"
+docker exec --user postgres db$i psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p'"
 
 
 docker stop db$i
@@ -124,9 +125,6 @@ docker start db$i
 
 
 done
-
-
-
 
 
 
