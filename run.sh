@@ -60,7 +60,7 @@ pg3-user=postgres
 EOF
 "
 docker exec -it --user postgres pgbackrest psql -c "alter system set archive_mode to 'on' "
-docker exec -it --user postgres pgbackrest psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive_push %p' "
+docker exec -it --user postgres pgbackrest psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p' "
 
 docker stop pgbackrest 
 docker start pgbackrest

@@ -36,21 +36,13 @@ cat > /etc/pgbackrest.conf<<EOF
 repo1-path=/var/lib/pgbackrest
 repo1-retention-full=2
 [demo]
-pg1-host=7.7.7.1
 pg1-path=/var/lib/postgresql/data
-pg1-user=postgres
-pg2-host=7.7.7.2
-pg2-path=/var/lib/postgresql/data
-pg2-user=postgres
-pg3-host=7.7.7.3
-pg3-path=/var/lib/postgresql/data
-pg3-user=postgres
 EOF
 #pgbackrest --stanza=demo --log-level-console=info stanza-create
 #pgbackrest --stanza=demo --log-level-console=info check
 "
 docker exec -it --user postgres pgbackrest psql -c "alter system set archive_mode to 'on' "
-docker exec -it --user postgres pgbackrest psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive_push %p' "
+docker exec -it --user postgres pgbackrest psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p' "
 
 docker stop pgbackrest 
 docker start pgbackrest
