@@ -1,7 +1,7 @@
+#!/bin/bash 
 
 
 docker rm pgbackrest --force 
-
 
 ### pgbackrest
 docker run -d --name pgbackrest -h pgbackrest --network db --ip 7.7.7.100 \
@@ -28,6 +28,14 @@ docker cp ssh/authorized_keys pgbackrest:/var/lib/postgresql/.ssh/
 docker exec -it pgbackrest bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
 docker exec -it pgbackrest bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
+### psql
+docker exec --user postgres pgbackrest psql -c "alter system set archive_mode to on"
+docker exec --user postgres pgbackrest psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p'"
+docker exec --user postgres pgbackrest psql -c "select pg_reload_conf()"
+
+docker restart pgbackrest
+sleep 5 
+
 ### postgres
 docker exec -it --user postgres pgbackrest bash -c " 
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
@@ -35,16 +43,26 @@ cat > /etc/pgbackrest.conf<<EOF
 [global]
 repo1-path=/var/lib/pgbackrest
 repo1-retention-full=2
+
 [demo]
 pg1-path=/var/lib/postgresql/data
+
+### primary 11 12 13 ...
+[dbs]
+pg1-host=7.7.7.11
+pg1-path=/var/lib/postgresql/data
+pg1-user=postgres
+#pg2-host=7.7.7.12
+#pg2-path=/var/lib/postgresql/data
+#pg2-user=postgres
+#pg3-host=7.7.7.13
+#pg3-path=/var/lib/postgresql/data
+#pg3-user=postgres
 EOF
-#pgbackrest --stanza=demo --log-level-console=info stanza-create
-#pgbackrest --stanza=demo --log-level-console=info check
+
+pgbackrest --stanza=demo --log-level-console=info stanza-create
+pgbackrest --stanza=demo --log-level-console=info check
 "
-docker exec -it --user postgres pgbackrest psql -c "alter system set archive_mode to 'on' "
-docker exec -it --user postgres pgbackrest psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p' "
 
 docker stop pgbackrest 
 docker start pgbackrest
-
-
