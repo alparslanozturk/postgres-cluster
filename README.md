@@ -1,5 +1,5 @@
 
-# alias eklenerek de herhangi bir docker a bağlanılabilir. 
+# 1. alias eklenerek de herhangi bir docker a bağlanılabilir. 
 
 ```
 $ alias db1='docker exec -it --user postgres db1 bash -c "cd ~; bash "'
@@ -11,7 +11,7 @@ postgres@pgbackrest:~$
 ```
 
 
-# Postgresql cluster replication kurulumu
+# 2. Postgresql cluster replication kurulumu
 
 docker ile postgresql replication kurulumu yapılacaktır. 
 
