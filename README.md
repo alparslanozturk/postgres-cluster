@@ -65,3 +65,17 @@ rm -rf /var/lib/postgresql/data/*
 pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db3 -h 7.7.7.11 -P -v
 
 docker start db3
+
+
+
+
+Aşağıdaki hata görüyorsanız "pgbacrest --stanza=??? backup komudunu pgbackreset sunucu üzerinden çalıştırın diyor.
+
+```
+postgres@db2:~$ pgbackrest --stanza=db2 backup
+2022-03-09 16:26:30.534 P00   INFO: backup command begin 2.37: --exec-id=101-70c3d7ee --log-level-console=info --pg1-path=/var/lib/postgresql/data --repo1-host=7.7.7.100 --repo1-host-user=postgres --repo1-retention-full=5 --stanza=db2
+ERROR: [072]: backup command must be run on the repository host
+```
+
+
+
