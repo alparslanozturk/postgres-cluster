@@ -69,6 +69,8 @@ docker start db3
 
 
 
+### backup 
+
 Aşağıdaki hata görüyorsanız "pgbacrest --stanza=??? backup komudunu pgbackreset sunucu üzerinden çalıştırın diyor.
 
 ```
