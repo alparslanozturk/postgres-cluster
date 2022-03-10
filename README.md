@@ -3,37 +3,39 @@
 
 ```
 $ alias db1='docker exec -it --user postgres db1 bash -c "cd ~; bash "'
-
 $ db1
-postgres@pgbackrest:~$
-postgres@pgbackrest:~$
-postgres@pgbackrest:~$
+postgres@db1:~$
 ```
 
 
 # 2. Postgresql cluster replication kurulumu
 
-docker ile postgresql replication kurulumu yapılacaktır. 
+run.sh çalıştırıldıktan sonra postgresql replication kurulumu yapılacaktır. Bu işlem için DB1 ve DB2 üzerinde 
+DATA dizini silinip pg_basebackup komudu çalıştırlması yeterlidir. Eski sistemlerde kullanılan recovery.conf ve diğer ayarlara gerek yoktur. 
+
 
 
 ![image](https://user-images.githubusercontent.com/9527118/155673474-f1e87e5c-899c-4b69-b1e4-351faa27c16b.png)
 
 
-1. Aynı extension kurulu olmalıdır. 
-2. "postgres" kullanıcı için pg_hba.conf a bir satır girilmelidir.
-3. "repuser" gibi bir role acilaiblir. tüm yetkileri readonly olacaktir. 
+- Aynı extension kurulu olmalıdır. 
+- "postgres" kullanıcı için pg_hba.conf girilen "all all" kesinlikle yeterli degildir. Dockerlarda replication için satır girilmiştir. 
+- "repuser" gibi bir role acilaiblir. tüm yetkileri readonly olacaktir. 
   
-
+  
+```
 docker exec -it --user postgres db1 bash
+$psql
+postgres=#create role repuser password 'parola' login replication;
+```
 
-create role repuser password 'parola' login replication;
-
--> pg_hba.conf;
-
+pg_hba.conf
+```
 host   replication     all             7.7.7.0/24              trust
-  
+```
 
 
+diğer örnekler;
 ```
 select pg_drop_replication_slot('db2');
 select * from pg_stat_replication;
@@ -49,20 +51,23 @@ select pg_drop_replication_slot('db2')
 # DB2
 docker exec -it --user postgres db2 bash 
 
+```
 rm -rf /var/lib/postgresql/data/*
-
 pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db2 -h 7.7.7.11 -P -v
+```
 
 docker start db2 
+
 
 
 # DB3
 
 docker exec -it db2 bash 
 
+```
 rm -rf /var/lib/postgresql/data/*
-
 pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db3 -h 7.7.7.11 -P -v
+```
 
 docker start db3
 
