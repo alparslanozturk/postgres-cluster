@@ -15,6 +15,7 @@ DATA dizini silinip pg_basebackup komudu çalıştırlması yeterlidir. Eski sis
 
 
 
+select * from pg_stat_replication \watch
 ![image](https://user-images.githubusercontent.com/9527118/155673474-f1e87e5c-899c-4b69-b1e4-351faa27c16b.png)
 
 
