@@ -52,12 +52,13 @@ sleep 5
 
 ### postgres
 docker exec -it --user postgres pgbackrest bash -c " 
+sed -i '/^host all all all scram-sha-256/i host replication all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 cat > /etc/pgbackrest.conf<<EOF
 [global]
 repo1-path=/var/lib/pgbackrest
+repo1-retention-full=5
 log-level-console=info
-repo1-retention-full=2
 
 ### local
 [demo]
@@ -69,13 +70,13 @@ pg1-host=7.7.7.11
 pg1-path=/var/lib/postgresql/data
 pg1-user=postgres
 [db2]
-pg2-host=7.7.7.12
-pg2-path=/var/lib/postgresql/data
-pg2-user=postgres
+pg1-host=7.7.7.12
+pg1-path=/var/lib/postgresql/data
+pg1-user=postgres
 [db3]
-pg3-host=7.7.7.13
-pg3-path=/var/lib/postgresql/data
-pg3-user=postgres
+pg1-host=7.7.7.13
+pg1-path=/var/lib/postgresql/data
+pg1-user=postgres
 
 ### primary 11...
 [dbs]
@@ -142,7 +143,7 @@ docker exec -it db$i bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
 ### psql 
 docker exec --user postgres db$i psql -c "alter system set archive_mode to on"
-docker exec --user postgres db$i psql -c "alter system set archive_command to 'pgbackrest --stanza=dbs archive-push %p'"
+docker exec --user postgres db$i psql -c "alter system set archive_command to 'pgbackrest --stanza=db$i archive-push %p'"
 docker exec --user postgres db$i psql -c "select pg_reload_conf()"
 
 docker restart $db$i
@@ -150,16 +151,18 @@ sleep 5
 
 ### postgres
 docker exec --user postgres db$i bash -c " 
+sed -i '/^host all all all scram-sha-256/i host replication all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 cat >/etc/pgbackrest.conf<<EOF
 [global]
 repo1-host=7.7.7.100
 repo1-host-user=postgres
+repo1-retention-full=5
 log-level-console=info
-
 [db$i]
-pg$i-path=/var/lib/postgresql/data
+pg1-path=/var/lib/postgresql/data
 EOF
+
 pgbackrest --stanza=db$i stanza-create
 pgbackrest --stanza=db$i info
 "
