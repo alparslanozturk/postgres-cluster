@@ -19,7 +19,9 @@ docker run -d --name pgbackrest -h pgbackrest --network db --ip 7.7.7.100 \
   postgres
 
 ### root
-docker exec -it pgbackrest bash -c " 
+docker exec pgbackrest bash -c " 
+localedef -c -f UTF-8 -i en_US en_US.UTF-8
+localedef -c -f UTF-8 -i tr_TR tr_TR.UTF-8
 apt update && apt install iproute2 procps netcat sudo curl nano openssh-server pgbackrest -y 
 touch /var/lib/postgresql/.psql_history && chown postgres: /var/lib/postgresql/.psql_history
 mkdir /var/lib/postgresql/.ssh
@@ -38,8 +40,9 @@ docker cp ssh/id_rsa pgbackrest:/var/lib/postgresql/.ssh/
 docker cp ssh/id_rsa.pub pgbackrest:/var/lib/postgresql/.ssh/
 docker cp ssh/authorized_keys pgbackrest:/var/lib/postgresql/.ssh/
 docker cp ssh/config pgbackrest:/var/lib/postgresql/.ssh/
-docker exec -it pgbackrest bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
-docker exec -it pgbackrest bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
+docker exec pgbackrest bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
+docker exec pgbackrest bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
+docker exec pgbackrest bash -c "sed -i 's/# tr_TR.UTF-8 UTF-8/tr_TR.UTF-8 UTF-8/g' /etc/locale.gen; locale-gen "
 
 
 ### psql 
@@ -51,7 +54,7 @@ docker restart pgbackrest
 sleep 5
 
 ### postgres
-docker exec -it --user postgres pgbackrest bash -c " 
+docker exec --user postgres pgbackrest bash -c " 
 sed -i '/^host all all all scram-sha-256/i host replication all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 cat > /etc/pgbackrest.conf<<EOF
@@ -118,7 +121,11 @@ docker run -d --name db$i -h db$i --network db --ip 7.7.7.1$i \
   postgres 
 
 ### root
+#docker exec db$i bash -c "sed -i 's/# tr_TR.UTF-8 UTF-8/tr_TR.UTF-8 UTF-8/g' /etc/locale.gen; locale-gen "
+#sleep 3
 docker exec db$i bash -c "
+localedef -c -f UTF-8 -i en_US en_US.UTF-8
+localedef -c -f UTF-8 -i tr_TR tr_TR.UTF-8
 apt update && apt install iproute2 procps netcat sudo curl nano openssh-server pgbackrest -y
 touch /var/lib/postgresql/.psql_history && chown postgres: /var/lib/postgresql/.psql_history
 mkdir /var/lib/postgresql/.ssh 
@@ -138,8 +145,6 @@ docker cp ssh/authorized_keys db$i:/var/lib/postgresql/.ssh/
 docker cp ssh/config db$i:/var/lib/postgresql/.ssh/
 docker exec -it db$i bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
 docker exec -it db$i bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
-
-
 
 ### psql 
 docker exec --user postgres db$i psql -c "alter system set archive_mode to on"
