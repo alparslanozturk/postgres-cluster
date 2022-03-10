@@ -1,6 +1,11 @@
 
 # 1. alias eklenerek de herhangi bir docker a bağlanılabilir. 
 
+alias db1='docker exec -it --user postgres db1 bash -c "cd ~; bash "'
+alias db2='docker exec -it --user postgres db2 bash -c "cd ~; bash "'        
+alias db3='docker exec -it --user postgres db3 bash -c "cd ~; bash "'
+alias rst='docker exec -it --user postgres pgbackrest bash -c "cd ~; bash "' 
+
 ```
 $ alias db1='docker exec -it --user postgres db1 bash -c "cd ~; bash "'
 $ db1
