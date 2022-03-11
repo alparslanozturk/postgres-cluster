@@ -76,6 +76,67 @@ pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db3 -h 7.7.7.11 -P -v
 docker start db3
 
 
+# "aplication_name" hk. 
+
+postgres@db2:~$ nano  /var/lib/postgresql/data/postgresql.auto.conf
+![image](https://user-images.githubusercontent.com/9527118/157861242-7c0c9da3-e30a-4753-92d4-0305f2162b15.png)
+
+
+ ```
+ postgres@db1:~$ psql
+psql (14.1 (Debian 14.1-1.pgdg110+1))
+Type "help" for help.
+
+postgres=# \x
+Expanded display is on.
+postgres=# select * from pg_stat_replication;
+-[ RECORD 1 ]----+------------------------------
+pid              | 590
+usesysid         | 10
+usename          | postgres
+application_name | db2
+client_addr      | 7.7.7.12
+client_hostname  |
+client_port      | 59980
+backend_start    | 2022-03-11 14:48:40.315767+03
+backend_xmin     |
+state            | streaming
+sent_lsn         | 0/F000148
+write_lsn        | 0/F000148
+flush_lsn        | 0/F000148
+replay_lsn       | 0/F000148
+write_lag        |
+flush_lag        |
+replay_lag       |
+sync_priority    | 0
+sync_state       | async
+reply_time       | 2022-03-11 14:59:27.831192+03
+-[ RECORD 2 ]----+------------------------------
+pid              | 584
+usesysid         | 10
+usename          | postgres
+application_name | walreceiver
+client_addr      | 7.7.7.13
+client_hostname  |
+client_port      | 39164
+backend_start    | 2022-03-11 14:44:20.876102+03
+backend_xmin     |
+state            | streaming
+sent_lsn         | 0/F000148
+write_lsn        | 0/F000148
+flush_lsn        | 0/F000148
+replay_lsn       | 0/F000148
+write_lag        |
+flush_lag        |
+replay_lag       |
+sync_priority    | 0
+sync_state       | async
+reply_time       | 2022-03-11 14:59:27.831188+03
+
+postgres=#
+
+```
+
 
 
 # Backup
