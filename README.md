@@ -75,7 +75,7 @@ pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db3 -h 7.7.7.11 -P -v
 
 docker start db3
 
-## Sonuc
+### Sonuc
 ```
 docker exec --user postgres db1 psql -xc "select * from pg_stat_replication "
 ```
