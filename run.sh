@@ -42,7 +42,6 @@ docker cp ssh/authorized_keys pgbackrest:/var/lib/postgresql/.ssh/
 docker cp ssh/config pgbackrest:/var/lib/postgresql/.ssh/
 docker exec pgbackrest bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
 docker exec pgbackrest bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
-docker exec pgbackrest bash -c "sed -i 's/# tr_TR.UTF-8 UTF-8/tr_TR.UTF-8 UTF-8/g' /etc/locale.gen; locale-gen "
 
 
 ### psql 
