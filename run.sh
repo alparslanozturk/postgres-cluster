@@ -61,6 +61,8 @@ cat > /etc/pgbackrest.conf<<EOF
 repo1-path=/var/lib/pgbackrest
 repo1-retention-full=5
 log-level-console=info
+backup-standby=y
+start-fast=y
 
 ### local
 [demo]
@@ -80,7 +82,7 @@ pg1-host=7.7.7.13
 pg1-path=/var/lib/postgresql/data
 pg1-user=postgres
 
-### primary 11...
+### primary 11, standby 12 13
 [dbs]
 pg1-host=7.7.7.11
 pg1-path=/var/lib/postgresql/data
@@ -177,12 +179,11 @@ done
 
 
 
+sleep 5
 for i in 1 2 3
 do 
-docker exec --user postgres pgbackrest bash -c " 
-pgbackrest --stanza=db$i check
-pgbackrest --stanza=db$i backup
-pgbackrest --stanza=db$i backup
-pgbackrest --stanza=db$i info
-"
+docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i check"
+docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i backup"
+docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i backup"
+docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i info"
 done
