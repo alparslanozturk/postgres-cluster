@@ -6,11 +6,12 @@
 docker rm pgbackrest --force 
 docker rm db1 db2 db3 --force 
 docker network rm db
-docker network create db --subnet 7.7.7.0/24
+docker network create db --subnet 7.7.7.0/24 --ipv6=false
 
 
 ### pgbackrest
 docker run -d --name pgbackrest -h pgbackrest --network db --ip 7.7.7.100 \
+  --sysctl "net.ipv6.conf.all.disable_ipv6=1" \
   -e POSTGRES_HOST_AUTH_METHOD=scram-sha-256 \
   -e POSTGRES_PASSWORD="parola" \
   -e POSTGRES_INITDB_ARGS="--data-checksums" \
@@ -56,6 +57,7 @@ sleep 5
 docker exec --user postgres pgbackrest bash -c " 
 sed -i '/^host all all all scram-sha-256/i host replication all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
+sed -i '/::1/d' /var/lib/postgresql/data/pg_hba.conf
 cat > /etc/pgbackrest.conf<<EOF
 [global]
 repo1-path=/var/lib/pgbackrest
@@ -113,6 +115,7 @@ do
 
 ### db
 docker run -d --name db$i -h db$i --network db --ip 7.7.7.1$i \
+  --sysctl "net.ipv6.conf.all.disable_ipv6=1" \
   -p 5432$i:5432 \
   -e POSTGRES_HOST_AUTH_METHOD=scram-sha-256 \
   -e POSTGRES_PASSWORD="parola" \
@@ -159,6 +162,7 @@ sleep 5
 docker exec --user postgres db$i bash -c " 
 sed -i '/^host all all all scram-sha-256/i host replication all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
+sed -i '/::1/d' /var/lib/postgresql/data/pg_hba.conf
 cat >/etc/pgbackrest.conf<<EOF
 [global]
 repo1-host=7.7.7.100
@@ -188,13 +192,20 @@ do
 docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i info"
 done
 
+
+
 ### application name fix
 for i in 2 3
 do 
+docker exec --user postgres db$i bash -c "
+rm -rf /var/lib/postgresql/data/*
+pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db$i -h 7.7.7.11 -P -v
+"
 docker exec --user postgres db$i bash -c "sed -i 's/user=postgres/application_name=db$i user=postgres/g' /var/lib/postgresql/data/postgresql.auto.conf"
 docker restart db$i
 done
 
 sleep 5
-docker exec --user postgres db1 psql -c " select * from pg_replication_slots "
+docker exec --user postgres db1 psql -c "create database msrs locale='tr_TR.UTF8' template template0;"
+docker exec --user postgres db1 psql -c "select * from pg_replication_slots "
 
