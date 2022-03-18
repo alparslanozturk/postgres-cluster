@@ -152,7 +152,7 @@ docker exec --user postgres db$i psql -c "alter system set archive_mode to on"
 docker exec --user postgres db$i psql -c "alter system set archive_command to 'pgbackrest --stanza=db$i archive-push %p'"
 docker exec --user postgres db$i psql -c "select pg_reload_conf()"
 
-docker restart $db$i
+docker restart db$i
 sleep 5
 
 ### postgres
@@ -178,12 +178,23 @@ docker start db$i
 done
 
 
-
+### pgbacrest fix
 sleep 5
 for i in 1 2 3
 do 
-docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i check"
-docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i backup"
-docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i backup"
+#docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i check"
+#docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i backup"
+#docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i backup"
 docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i info"
 done
+
+### application name fix
+for i in 2 3
+do 
+docker exec --user postgres db$i bash -c "sed -i 's/user=postgres/application_name=db$i user=postgres/g' /var/lib/postgresql/data/postgresql.auto.conf"
+docker restart db$i
+done
+
+sleep 5
+docker exec --user postgres db1 psql -c " select * from pg_replication_slots "
+
