@@ -10,6 +10,8 @@ $ db1
 postgres@db1:~$
 ```
 
+Note: docker run komudu ile --shm-size=1g gibi vermek çok iyi olacaktır. default 64M gibi bir şey sanırım. pgbackrest ve diğer komutlarda sorun yaşanabilir...
+
 
 # 2. Postgresql cluster replication kurulumu
 
