@@ -65,8 +65,8 @@ Stream replicaiton active durumu false olduğu görülebilir:
 
 ## db1 üzerinde
 ```
-select pg_drop_replication_slot('db2')
-select pg_drop_replication_slot('db3')
+select pg_drop_replication_slot('db2');
+select pg_drop_replication_slot('db3');
 ```
 tekrardan aşağıdaki adımlar yapılır....
 
