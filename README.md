@@ -10,6 +10,8 @@ $ db1
 postgres@db1:~$
 ```
 
+Note: docker run komudu ile --shm-size=1g gibi vermek çok iyi olacaktır. default 64M gibi bir şey sanırım. pgbackrest ve diğer komutlarda sorun yaşanabilir...
+
 
 # 2. Postgresql cluster replication kurulumu
 
@@ -50,6 +52,25 @@ select pg_conf_reload();
 
 select pg_drop_replication_slot('db2')
 ```
+
+Sunucular çok uzun süre kapalı kalırsa, pgbacrest wal'ları arşive kaldıracak ve aradaki kayıplar kapatılamayacaktır. Bu durumda tekrardan Slotlar silinir ve replication kurulabilir. 
+
+Stream replicaiton active durumu false olduğu görülebilir:
+![image](https://user-images.githubusercontent.com/9527118/159441043-682b341c-bb4f-404f-aaaf-96ba58711d64.png)
+
+```
+2022-03-22 11:37:10.377 +03 [495] DETAIL:  The primary's identifier is 7076434890037256232, the standby's identifier is 7076435427321561129.
+2022-03-22 11:37:15.381 +03 [496] FATAL:  database system identifier differs between the primary and standby
+2022-03-22 11:37:15.381 +03 [496] DETAIL:  The primary's identifier is 7076434890037256232, the standby's identifier is 7076435427321561129.
+2022-03-22 11:37:20.391 +03 [497] FATAL:  database system identifier differs between the primary and standby
+```
+
+## db1 üzerinde
+```
+select pg_drop_replication_slot('db2');
+select pg_drop_replication_slot('db3');
+```
+tekrardan aşağıdaki adımlar yapılır....
 
 
 # DB2
