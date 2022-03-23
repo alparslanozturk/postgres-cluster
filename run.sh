@@ -1,17 +1,15 @@
 #!/bin/bash 
 
-
-
 ### docker re-create
 docker rm pgbackrest --force 
 docker rm db1 db2 db3 --force 
 docker network rm db
 docker network create db --subnet 7.7.7.0/24 --ipv6=false
 
-
 ### pgbackrest
 docker run -d --name pgbackrest -h pgbackrest --network db --ip 7.7.7.100 \
   --sysctl "net.ipv6.conf.all.disable_ipv6=1" \
+  --shm-size=1g \
   -e POSTGRES_HOST_AUTH_METHOD=scram-sha-256 \
   -e POSTGRES_PASSWORD="parola" \
   -e POSTGRES_INITDB_ARGS="--data-checksums" \
@@ -19,7 +17,7 @@ docker run -d --name pgbackrest -h pgbackrest --network db --ip 7.7.7.100 \
   -e PGTZ="Europe/Istanbul" \
   postgres
 
-### root
+### root user fix bla bla...
 docker exec pgbackrest bash -c " 
 localedef -c -f UTF-8 -i en_US en_US.UTF-8
 localedef -c -f UTF-8 -i tr_TR tr_TR.UTF-8
@@ -44,16 +42,12 @@ docker cp ssh/config pgbackrest:/var/lib/postgresql/.ssh/
 docker exec pgbackrest bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
 docker exec pgbackrest bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
-
-### psql 
+### psql user fix bla bla...
 docker exec --user postgres pgbackrest psql -c "alter system set archive_mode to on"
 docker exec --user postgres pgbackrest psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p'"
 docker exec --user postgres pgbackrest psql -c "select pg_reload_conf()"
-
 docker restart pgbackrest
 sleep 5
-
-### postgres
 docker exec --user postgres pgbackrest bash -c " 
 sed -i '/^host all all all scram-sha-256/i host replication all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
@@ -63,28 +57,7 @@ cat > /etc/pgbackrest.conf<<EOF
 repo1-path=/var/lib/pgbackrest
 repo1-retention-full=5
 log-level-console=info
-backup-standby=y
 start-fast=y
-
-### local
-[demo]
-pg1-path=/var/lib/postgresql/data
-
-### standalone
-[db1]
-pg1-host=7.7.7.11
-pg1-path=/var/lib/postgresql/data
-pg1-user=postgres
-[db2]
-pg1-host=7.7.7.12
-pg1-path=/var/lib/postgresql/data
-pg1-user=postgres
-[db3]
-pg1-host=7.7.7.13
-pg1-path=/var/lib/postgresql/data
-pg1-user=postgres
-
-### primary 11, standby 12 13
 [dbs]
 pg1-host=7.7.7.11
 pg1-path=/var/lib/postgresql/data
@@ -95,27 +68,24 @@ pg2-user=postgres
 pg3-host=7.7.7.13
 pg3-path=/var/lib/postgresql/data
 pg3-user=postgres
+#recovery-option=primary_conninfo=host=7.7.7.11 user=postgres
 EOF
-
-pgbackrest --stanza=demo stanza-create
-pgbackrest --stanza=demo check
-pgbackrest --stanza=demo backup
-pgbackrest --stanza=demo backup
-pgbackrest --stanza=demo info
 "
-
 docker stop pgbackrest 
 docker start pgbackrest
 
 
 
 
+
+
+
 for i in 1 2 3
 do 
-
 ### db
 docker run -d --name db$i -h db$i --network db --ip 7.7.7.1$i \
   --sysctl "net.ipv6.conf.all.disable_ipv6=1" \
+  --shm-size=1g \
   -p 5432$i:5432 \
   -e POSTGRES_HOST_AUTH_METHOD=scram-sha-256 \
   -e POSTGRES_PASSWORD="parola" \
@@ -124,9 +94,7 @@ docker run -d --name db$i -h db$i --network db --ip 7.7.7.1$i \
   -e PGTZ="Europe/Istanbul" \
   postgres 
 
-### root
-#docker exec db$i bash -c "sed -i 's/# tr_TR.UTF-8 UTF-8/tr_TR.UTF-8 UTF-8/g' /etc/locale.gen; locale-gen "
-#sleep 3
+### root user fix bla bla...
 docker exec db$i bash -c "
 localedef -c -f UTF-8 -i en_US en_US.UTF-8
 localedef -c -f UTF-8 -i tr_TR tr_TR.UTF-8
@@ -150,15 +118,12 @@ docker cp ssh/config db$i:/var/lib/postgresql/.ssh/
 docker exec -it db$i bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
 docker exec -it db$i bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
-### psql 
+### psql user fix bla bla...
 docker exec --user postgres db$i psql -c "alter system set archive_mode to on"
-docker exec --user postgres db$i psql -c "alter system set archive_command to 'pgbackrest --stanza=db$i archive-push %p'"
+docker exec --user postgres db$i psql -c "alter system set archive_command to 'pgbackrest --stanza=dbs archive-push %p'"
 docker exec --user postgres db$i psql -c "select pg_reload_conf()"
-
 docker restart db$i
 sleep 5
-
-### postgres
 docker exec --user postgres db$i bash -c " 
 sed -i '/^host all all all scram-sha-256/i host replication all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
@@ -169,43 +134,48 @@ repo1-host=7.7.7.100
 repo1-host-user=postgres
 repo1-retention-full=5
 log-level-console=info
-[db$i]
+start-fast=y
+[dbs]
+pg1-host=7.7.7.11
 pg1-path=/var/lib/postgresql/data
+pg1-user=postgres
+pg2-host=7.7.7.12
+pg2-path=/var/lib/postgresql/data
+pg2-user=postgres
+pg3-host=7.7.7.13
+pg3-path=/var/lib/postgresql/data
+pg3-user=postgres
+#recovery-option=primary_conninfo=host=7.7.7.11 user=postgres
 EOF
-
-pgbackrest --stanza=db$i stanza-create
-pgbackrest --stanza=db$i info
 "
-
 docker stop db$i
 docker start db$i
 done
 
 
-### pgbacrest fix
-sleep 5
-for i in 1 2 3
-do 
-#docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i check"
-#docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i backup"
-#docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i backup"
-docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=db$i info"
-done
+### stanza-create=dbs
+docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=dbs stanza-create"
+docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=dbs info"
+sleep 7 
 
-
-
-### application name fix
+### stream replication on db2,db3
 for i in 2 3
-do 
+do
+docker exec --user postgres db1 psql -c " select pg_drop_replication_slot('db$i'); "
 docker exec --user postgres db$i bash -c "
-rm -rf /var/lib/postgresql/data/*
-pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db$i -h 7.7.7.11 -P -v
+rm -rf /var/lib/postgresql/data
+pg_basebackup -D /var/lib/postgresql/data/ -Fp -R -C -S db$i -h 7.7.7.11 -P -v
 "
-docker exec --user postgres db$i bash -c "sed -i 's/user=postgres/application_name=db$i user=postgres/g' /var/lib/postgresql/data/postgresql.auto.conf"
+sleep 5
+docker exec --user postgres db$i bash -c " sed -i 's/user=postgres/application_name=db$i user=postgres/g' /var/lib/postgresql/data/postgresql.auto.conf "
+docker restart db$i
+sleep 5
 docker restart db$i
 done
 
-sleep 5
+sleep 10
+
+### msrs database create
 docker exec --user postgres db1 psql -c "create database msrs locale='tr_TR.UTF8' template template0;"
 docker exec --user postgres db1 psql -c "select * from pg_replication_slots "
-
+docker exec --user postgres db1 psql -c "select * from pg_stat_replication  "
