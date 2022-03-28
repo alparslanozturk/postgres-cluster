@@ -78,7 +78,7 @@ docker exec -it --user postgres db2 bash
 
 ```
 rm -rf /var/lib/postgresql/data/*
-pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db2 -h 7.7.7.11 -P -v
+pg_basebackup --username=repuser --host=7.7.7.11 --pgdata=/var/lib/postgresql/data/ --write-recovery-conf --create-slot --slot=db2
 ```
 
 docker start db2 
@@ -87,11 +87,11 @@ docker start db2
 
 # DB3
 
-docker exec -it db2 bash 
+docker exec -it db3 bash 
 
 ```
 rm -rf /var/lib/postgresql/data/*
-pg_basebackup  -D /var/lib/postgresql/data/ -Fp -R -C -S db3 -h 7.7.7.11 -P -v
+pg_basebackup --username=repuser --host=7.7.7.11 --pgdata=/var/lib/postgresql/data/ --write-recovery-conf --create-slot --slot=db3
 ```
 
 docker start db3
