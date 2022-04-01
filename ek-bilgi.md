@@ -65,3 +65,24 @@ postgres=# show archive_command;
 
 postgres=# \q
 ```
+
+
+
+### pgbackrest yedekleme işlemleri hk. 
+
+```
+docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=dbs stanza-create"
+docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=dbs info"
+
+docker exec --user postgres db1 psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p'"  
+docker exec --user postgres db2 psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p'"  
+docker exec --user postgres db3 psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p'"  
+
+docker restart db1
+sleep 15
+docker restart db2
+sleep 5 
+docker restart db3
+
+
+```
