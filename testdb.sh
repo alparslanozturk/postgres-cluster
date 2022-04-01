@@ -1,4 +1,4 @@
-
+#!/bin/bash 
 
 
 psql  -U postgres -h 7.7.7.11 -c "create database testdb"

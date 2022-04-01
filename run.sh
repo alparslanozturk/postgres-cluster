@@ -23,6 +23,7 @@ localedef -c -f UTF-8 -i en_US en_US.UTF-8
 localedef -c -f UTF-8 -i tr_TR tr_TR.UTF-8
 apt update && apt install iproute2 procps netcat sudo curl nano openssh-server pgbackrest -y 
 touch /var/lib/postgresql/.psql_history && chown postgres: /var/lib/postgresql/.psql_history
+echo 'AddressFamily inet' >>/etc/ssh/sshd_config
 mkdir /var/lib/postgresql/.ssh
 cat >/var/lib/postgresql/.ssh/config<<EOF
 Host *
@@ -43,15 +44,14 @@ docker exec pgbackrest bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
 docker exec pgbackrest bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
 ### psql user fix bla bla...
+docker exec --user postgres pgbackrest psql -c "create user repuser with replication password 'parola'"
 docker exec --user postgres pgbackrest psql -c "alter system set archive_mode to on"
 docker exec --user postgres pgbackrest psql -c "alter system set archive_command to 'pgbackrest --stanza=demo archive-push %p'"
-docker exec --user postgres pgbackrest psql -c "select pg_reload_conf()"
-docker restart pgbackrest
-sleep 5
 docker exec --user postgres pgbackrest bash -c " 
-sed -i '/^host all all all scram-sha-256/i host replication all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
+sed -i '/^host all all all scram-sha-256/i host replication repuser 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/::1/d' /var/lib/postgresql/data/pg_hba.conf
+sed -ie '/^listen_addresses/c listen_addresses = \x270.0.0.0\x27' /var/lib/postgresql/data/postgresql.conf
 cat > /etc/pgbackrest.conf<<EOF
 [global]
 repo1-path=/var/lib/pgbackrest
@@ -71,8 +71,8 @@ pg3-user=postgres
 #recovery-option=primary_conninfo=host=7.7.7.11 user=postgres
 EOF
 "
-docker stop pgbackrest 
-docker start pgbackrest
+docker restart pgbackrest 
+sleep 10
 
 
 
@@ -100,6 +100,7 @@ localedef -c -f UTF-8 -i en_US en_US.UTF-8
 localedef -c -f UTF-8 -i tr_TR tr_TR.UTF-8
 apt update && apt install iproute2 procps netcat sudo curl nano openssh-server pgbackrest -y
 touch /var/lib/postgresql/.psql_history && chown postgres: /var/lib/postgresql/.psql_history
+echo 'AddressFamily inet' >>/etc/ssh/sshd_config
 mkdir /var/lib/postgresql/.ssh 
 cat >/var/lib/postgresql/.ssh/config<<EOF
 Host *
@@ -119,15 +120,17 @@ docker exec -it db$i bash -c " chown -R postgres: /var/lib/postgresql/.ssh "
 docker exec -it db$i bash -c " chmod 600 /var/lib/postgresql/.ssh/* "
 
 ### psql user fix bla bla...
+docker exec --user postgres db$i psql -c "create user repuser with replication password 'parola'"
 docker exec --user postgres db$i psql -c "alter system set archive_mode to on"
-docker exec --user postgres db$i psql -c "alter system set archive_command to 'pgbackrest --stanza=dbs archive-push %p'"
-docker exec --user postgres db$i psql -c "select pg_reload_conf()"
+docker exec --user postgres db$i psql -c "alter system set archive_command to '/bin/true'"
+#docker exec --user postgres db$i psql -c "alter system set archive_command to 'pgbackrest --stanza=dbs archive-push %p'"
 docker restart db$i
-sleep 5
+sleep 10
 docker exec --user postgres db$i bash -c " 
-sed -i '/^host all all all scram-sha-256/i host replication all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
+sed -i '/^host all all all scram-sha-256/i host replication repuser 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/^host all all all scram-sha-256/i host all all 7.7.7.0/24 trust' /var/lib/postgresql/data/pg_hba.conf
 sed -i '/::1/d' /var/lib/postgresql/data/pg_hba.conf
+sed -ie '/^listen_addresses/c listen_addresses = \x270.0.0.0\x27' /var/lib/postgresql/data/postgresql.conf
 cat >/etc/pgbackrest.conf<<EOF
 [global]
 repo1-host=7.7.7.100
@@ -148,33 +151,49 @@ pg3-user=postgres
 #recovery-option=primary_conninfo=host=7.7.7.11 user=postgres
 EOF
 "
-docker stop db$i
-docker start db$i
+docker restart db$i
+sleep 10
 done
 
 
-### stanza-create=dbs
-docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=dbs stanza-create"
-docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=dbs info"
-sleep 7 
+
+### log open on db1
+docker exec --user postgres db1 psql -c " alter system set log_connections='on' "
+docker restart db1
+sleep 10
+
+## stanza-create=dbs
+#docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=dbs stanza-create"
+#docker exec --user postgres pgbackrest bash -c "pgbackrest --stanza=dbs info"
+sleep 5
+
+
+
 
 ### stream replication on db2,db3
 for i in 2 3
 do
-docker exec --user postgres db1 psql -c " select pg_drop_replication_slot('db$i'); "
+docker stop db$i
+docker exec --user postgres db1 psql -c " select pg_drop_replication_slot('db$i') "
+docker start db$i
+sleep 5
 docker exec --user postgres db$i bash -c "
-rm -rf /var/lib/postgresql/data
-pg_basebackup -D /var/lib/postgresql/data/ -Fp -R -C -S db$i -h 7.7.7.11 -P -v
+rm -rf /var/lib/postgresql/data/*
+sleep 3
+pg_basebackup --username=repuser --host=7.7.7.11 --pgdata=/var/lib/postgresql/data/ --write-recovery-conf --create-slot --slot=db$i -v
+sleep 30
 "
-sleep 5
-docker exec --user postgres db$i bash -c " sed -i 's/user=postgres/application_name=db$i user=postgres/g' /var/lib/postgresql/data/postgresql.auto.conf "
+sleep 3
+docker start db$i
+sleep 15
+### fix application_name
+docker exec --user postgres db$i bash -c " sed -i 's/user=repuser/application_name=db$i user=repuser/g' /var/lib/postgresql/data/postgresql.auto.conf "
 docker restart db$i
+sleep 15
+done 
+
+
 sleep 5
-docker restart db$i
-done
-
-sleep 10
-
 ### msrs database create
 docker exec --user postgres db1 psql -c "create database msrs locale='tr_TR.UTF8' template template0;"
 docker exec --user postgres db1 psql -c "select * from pg_replication_slots "
