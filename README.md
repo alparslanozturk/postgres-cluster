@@ -107,9 +107,56 @@ docker exec --user postgres db1 psql -xc "select * from pg_stat_replication "
 postgres@db2:~$ nano  /var/lib/postgresql/data/postgresql.auto.conf
 ![image](https://user-images.githubusercontent.com/9527118/157861242-7c0c9da3-e30a-4753-92d4-0305f2162b15.png)
 
+```
+kullan@KUHEYLAN:~$ docker exec --user postgres db1 psql -xc "select * from pg_stat_replication"
+-[ RECORD 1 ]----+------------------------------
+pid              | 60
+usesysid         | 16384
+usename          | repuser
+application_name | db2
+client_addr      | 7.7.7.12
+client_hostname  |
+client_port      | 51156
+backend_start    | 2022-04-04 11:51:09.088472+03
+backend_xmin     |
+state            | streaming
+sent_lsn         | 0/160000D8
+write_lsn        | 0/160000D8
+flush_lsn        | 0/160000D8
+replay_lsn       | 0/160000D8
+write_lag        |
+flush_lag        |
+replay_lag       |
+sync_priority    | 0
+sync_state       | async
+reply_time       | 2022-04-04 11:52:59.411602+03
+-[ RECORD 2 ]----+------------------------------
+pid              | 68
+usesysid         | 16384
+usename          | repuser
+application_name | db3
+client_addr      | 7.7.7.13
+client_hostname  |
+client_port      | 42480
+backend_start    | 2022-04-04 11:52:10.289554+03
+backend_xmin     |
+state            | streaming
+sent_lsn         | 0/160000D8
+write_lsn        | 0/160000D8
+flush_lsn        | 0/160000D8
+replay_lsn       | 0/160000D8
+write_lag        |
+flush_lag        |
+replay_lag       |
+sync_priority    | 0
+sync_state       | async
+reply_time       | 2022-04-04 11:53:00.471779+03
 
- ```
- postgres@db1:~$ psql
+
+```
+
+```
+postgres@db1:~$ psql
 psql (14.1 (Debian 14.1-1.pgdg110+1))
 Type "help" for help.
 
