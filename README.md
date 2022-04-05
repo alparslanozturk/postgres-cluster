@@ -214,7 +214,7 @@ postgres=#
 
 # Backup
 
-Aşağıdaki hata görüyorsanız "pgbacrest --stanza=??? backup komudunu pgbackreset sunucu üzerinden çalıştırın diyor.
+Aşağıdaki hata görüyorsanız "pgbackrest --stanza=??? backup komudunu pgbackrest sunucu üzerinden çalıştırın diyor.
 
 ```
 postgres@db2:~$ pgbackrest --stanza=db2 backup
