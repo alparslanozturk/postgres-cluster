@@ -1,5 +1,5 @@
 
-# 1. alias eklenerek de herhangi bir docker a bağlanılabilir. 
+# 1. Aşağıdaki alias eklenerek de herhangi bir docker a bağlanılabilir. 
 ```
 alias db1='docker exec -it --user postgres db1 bash -c "cd ~; bash "'
 alias db2='docker exec -it --user postgres db2 bash -c "cd ~; bash "'        
